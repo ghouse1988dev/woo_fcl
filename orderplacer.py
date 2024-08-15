@@ -15,11 +15,11 @@ def create_order(extracted_data,sale_ids):
         
     body = extracted_data
     body = json.dumps(extracted_data)
-    """r = requests.post(API_URL, data=body, headers=headers)
+    r = requests.post(API_URL, data=body, headers=headers)
     print(r.status_code)
     if r.status_code == 200:
         for sale_id in sale_ids:
-            del_sale = requests.delete(f'https://api.hyros.com/v1/api/v1.0/sales/{sale_id}', headers=headers)"""
+            del_sale = requests.delete(f'https://api.hyros.com/v1/api/v1.0/sales/{sale_id}', headers=headers)
 
     pprint(body)
     print(sale_ids)

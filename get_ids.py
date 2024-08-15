@@ -53,11 +53,12 @@ def get_sales(fromDate,toDate):
             sale_id = sale['id']
             email = sale['lead'].get('email')
             if email.endswith('paypal.com'):
+                #print("Email:",email)
                 order_sales[order_id].append(sale_id)
                 
-
+        #print(order_sales.keys())
         order_sales_dict = [{'orderId': order_id, 'sale_id': sale_ids} for order_id, sale_ids in order_sales.items()]
-        pprint(order_sales_dict)
+        #pprint(order_sales_dict)
         
         if request_id:
             request_ids.append(request_id)
@@ -71,5 +72,5 @@ def get_sales(fromDate,toDate):
             break  # Exit loop if  nextPageID is not present
 
     
-    #print(order_sales_dict)
+    print(order_sales_dict)
     invoices.get_invoices(order_sales_dict, fromDate, toDate)

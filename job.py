@@ -14,7 +14,7 @@ def fetch_sales_data():
     #Calculate fromDate and toDate
     #from_date = now - timedelta(hours=6)
     toDate = now
-    fromDate = toDate - timedelta(hours=6)
+    fromDate = toDate - timedelta(hours=12)
        
     
     """# Format dates to the required format

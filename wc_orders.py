@@ -16,8 +16,8 @@ def fcl_orders(invoice_number,orderId,sale_ids):
     orderId = orderId
     sale_ids = sale_ids
     id = inv_id.replace('WC-','')
-    #print("OrderId : ", order_id)
-    #print("Invoice ID : ",id)
+    print("OrderId : ", orderId)
+    print("Invoice ID : ",id)
     data = wcapi.get("orders/{id}".format(id=id)).json()
 
     phone = []
