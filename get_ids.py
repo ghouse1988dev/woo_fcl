@@ -3,15 +3,12 @@ import requests
 import ssl
 import invoices
 from pprint import pprint
-from collections import defaultdict
 
 ssl._create_default_https_context = ssl._create_unverified_context
-
 creds = dotenv_values("creds.env")
-
 # Configuration
-API_URL = "https://api.hyros.com/v1/api/v1.0/sales"  # Replace with your actual API URL
-headers = {'API-Key': creds['hyro_key']}  # Replace with your actual API key
+API_URL = "https://api.hyros.com/v1/api/v1.0/sales" 
+headers = {'API-Key': creds['hyro_key']}
 
 def fetch_data(url, headers, params):
     """Fetch data from the API with given URL, headers, and parameters."""
@@ -20,9 +17,9 @@ def fetch_data(url, headers, params):
     return response.json()
 
 def get_sales(fromDate,toDate):
-    
+
     from_date_str = fromDate.strftime("%Y-%m-%dT%H:%M:%S")
-    to_date_str = toDate.strftime("%Y-%m-%dT%H:%M:%S")
+    to_date_str = toDate.strftime("%Y-%m-%dT%H:%M:%S")    
     
     params = {
         # Starting page or initial parameters if needed
@@ -31,35 +28,54 @@ def get_sales(fromDate,toDate):
         'pageSize':250
 
     }
-
     print("Hyro fromDate",params['fromDate'])
     print("Hyro toDate",params['toDate'])
 
-    res_list = []
+    result_list = []
     request_ids = []
     next_page_ids = []
+    grouped_data = {}
 
     while True:
         data = fetch_data(API_URL, headers, params)
-
-                        
+        print(data.keys())
+        
         # Extract requestId and nextPageID from the response
         request_id = data['request_id']
-        order_sales = defaultdict(list)
         
         # Iterate over each record in the JSON data
-        for sale in data['result']:
-            order_id = sale['orderId']
-            sale_id = sale['id']
-            email = sale['lead'].get('email')
-            if email.endswith('paypal.com'):
-                #print("Email:",email)
-                order_sales[order_id].append(sale_id)
-                
-        #print(order_sales.keys())
-        order_sales_dict = [{'orderId': order_id, 'sale_id': sale_ids} for order_id, sale_ids in order_sales.items()]
-        #pprint(order_sales_dict)
-        
+        for record in data['result']:
+            
+            
+            email = record['lead'].get('email')
+            if email.endswith("paypal.com"):
+                orderId = record.get('orderId')
+                sale_id = record['id']
+
+        # Create a dictionary with the required information
+                extracted_info = {
+                    'orderId': orderId,
+                    'email': email,
+                    'saleId':sale_id
+                    }
+                result_list.append(extracted_info)
+        for item in result_list:
+            orderId = item['orderId']
+            saleId = item['saleId']
+
+            # If the orderId is not in the dictionary, add it with the email and an empty list for saleIds
+            if orderId not in grouped_data:
+                grouped_data[orderId] = {
+                    'saleIds': []
+                }
+            grouped_data[orderId]['saleIds'].append(saleId)
+
+        #deduped_list = [i for n, i in enumerate(result_list) if i not in result_list[:n]]
+        result = [{'orderId': orderId, 'saleIds': details['saleIds']} for orderId, details in grouped_data.items()]   
+
+            # Append the dictionary to the result list
+            
+
         if request_id:
             request_ids.append(request_id)
             headers['request_id'] = request_id
@@ -71,6 +87,9 @@ def get_sales(fromDate,toDate):
         else:
             break  # Exit loop if  nextPageID is not present
 
+    print("Request IDs:", request_ids)
+    print("Next Page IDs:", next_page_ids)
+    #print("Order Data:", result)
     
-    print(order_sales_dict)
-    invoices.get_invoices(order_sales_dict, fromDate, toDate)
+    #return result_list
+    invoices.get_invoices(result, fromDate, toDate)
